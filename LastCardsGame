@@ -1,0 +1,152 @@
+📂 UnityCardSheddingGame/  
+├── 📂 Assets/  
+│   ├── 📂 Scripts/  
+│   │   ├── DeckManager.cs  
+│   │   ├── Card.cs  
+│   │   ├── Player.cs  
+│   │   ├── TurnManager.cs  
+│   │   ├── NetworkManagerCustom.cs  
+│   ├── 📂 Prefabs/ (Card Prefabs)  
+│   ├── 📂 Sprites/ (Card Images)  
+│   ├── 📂 UI/ (Buttons, Score, etc.)  
+│   ├── 📄 Scene.unity  
+│   ├── 📂 Mirror/ (Networking Package)  
+├── 📄 README.md  
+
+---
+
+### **DeckManager.cs** (Handles deck and shuffling)
+```csharp
+using System.Collections.Generic;
+using UnityEngine;
+
+public class DeckManager : MonoBehaviour
+{
+    public GameObject cardPrefab;
+    private List<Card> deck = new List<Card>();
+
+    void Start()
+    {
+        InitializeDeck();
+        ShuffleDeck();
+    }
+
+    void InitializeDeck()
+    {
+        string[] suits = { "Hearts", "Diamonds", "Clubs", "Spades" };
+        for (int i = 1; i <= 13; i++)
+        {
+            foreach (string suit in suits)
+            {
+                deck.Add(new Card(i, suit));
+            }
+        }
+    }
+
+    void ShuffleDeck()
+    {
+        for (int i = deck.Count - 1; i > 0; i--)
+        {
+            int randIndex = Random.Range(0, i + 1);
+            Card temp = deck[i];
+            deck[i] = deck[randIndex];
+            deck[randIndex] = temp;
+        }
+    }
+}
+```
+
+---
+
+### **Card.cs** (Card properties)
+```csharp
+public class Card
+{
+    public int Value;
+    public string Suit;
+
+    public Card(int value, string suit)
+    {
+        Value = value;
+        Suit = suit;
+    }
+}
+```
+
+---
+
+### **TurnManager.cs** (Handles turns in multiplayer)
+```csharp
+using Mirror;
+using UnityEngine;
+
+public class TurnManager : NetworkBehaviour
+{
+    [SyncVar] private int currentPlayerIndex = 0;
+    private int totalPlayers = 2;
+
+    [Command]
+    public void CmdEndTurn()
+    {
+        currentPlayerIndex = (currentPlayerIndex + 1) % totalPlayers;
+        RpcUpdateTurn(currentPlayerIndex);
+    }
+
+    [ClientRpc]
+    void RpcUpdateTurn(int newPlayer)
+    {
+        Debug.Log("It's now Player " + newPlayer + "'s turn!");
+    }
+}
+```
+
+---
+
+### **NetworkManagerCustom.cs** (Mirror Networking Setup)
+```csharp
+using Mirror;
+using UnityEngine;
+
+public class NetworkManagerCustom : NetworkManager
+{
+    public override void OnServerAddPlayer(NetworkConnectionToClient conn)
+    {
+        GameObject player = Instantiate(playerPrefab);
+        NetworkServer.AddPlayerForConnection(conn, player);
+    }
+}
+```
+
+---
+
+### **README.md** (Project Instructions)
+```markdown
+# Unity Card Shedding Game
+
+## 🎮 Game Overview
+A simple multiplayer card-shedding game built using Unity and Mirror.
+
+## 🛠 Tech Stack
+- Unity (2D)
+- C#
+- Mirror Networking
+
+## 🚀 Setup Instructions
+1. Clone the repo:
+   ```sh
+   git clone https://github.com/yourusername/UnityCardSheddingGame.git
+   ```
+2. Open in Unity 2021 or later.
+3. Install **Mirror** from the Package Manager.
+4. Open `Scene.unity` and press Play.
+
+## 🔧 Features
+- Multiplayer support (Mirror)
+- Turn-based gameplay
+- Card deck system
+
+## 📜 License
+MIT License
+```
+
+---
